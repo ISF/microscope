@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build Microscope.app into ./build. Pass "install" to also copy it to ~/Applications.
+# Build Microscope.app into ./build. Pass "install" to also copy it to /Applications.
 set -eu
 cd "$(dirname "$0")"
 swift build -c release
@@ -13,8 +13,7 @@ cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 codesign --force --sign - "$APP"
 echo "Built $APP"
 if [ "${1:-}" = "install" ]; then
-    rm -rf ~/Applications/Microscope.app
-    mkdir -p ~/Applications
-    cp -R "$APP" ~/Applications/
-    echo "Installed to ~/Applications/Microscope.app"
+    rm -rf /Applications/Microscope.app
+    ditto "$APP" /Applications/Microscope.app
+    echo "Installed to /Applications/Microscope.app"
 fi

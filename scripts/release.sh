@@ -6,7 +6,8 @@
 #   scripts/release.sh <version-tag> --upload    # also create/update the GH release
 #
 # The tag must match CFBundleShortVersionString in Resources/Info.plist
-# (tag "v0.1" <-> version "0.1").
+# (tag "v0.1" <-> version "0.1"), and CHANGELOG.md must have a section for
+# that version; it becomes the release notes.
 #
 # Env overrides:
 #   RELEASE_SIGNING_KEY  SSH private key used for signing (default ~/.ssh/id_ed25519)
@@ -40,6 +41,18 @@ PLIST_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" R
 if [[ "v${PLIST_VERSION}" != "$VERSION" ]]; then
     echo "release.sh: tag $VERSION doesn't match Info.plist version $PLIST_VERSION" >&2
     exit 5
+fi
+
+# Release notes come from the matching CHANGELOG.md section ("## [0.1.1] - ...").
+NOTES=$(awk -v v="$PLIST_VERSION" '
+    $0 ~ "^## \\[" v "\\]" { on = 1; next }
+    on && /^## \[/ { exit }
+    on && /^\[[^]]+\]: / { exit }
+    on { print }
+' CHANGELOG.md | sed -e '/./,$!d')
+if [[ -z "$NOTES" ]]; then
+    echo "release.sh: no CHANGELOG.md entry for [$PLIST_VERSION]" >&2
+    exit 6
 fi
 
 step() { printf '\n\033[1;36m▸ %s\033[0m\n' "$*"; }
@@ -77,10 +90,11 @@ if [[ $UPLOAD -eq 1 ]]; then
     if gh release view "$VERSION" >/dev/null 2>&1; then
         step "Uploading to existing release ${VERSION}"
         gh release upload "$VERSION" "$ZIP" "$SIG" "$SUMS" --clobber
+        gh release edit "$VERSION" --notes "$NOTES"
     else
         step "Creating release ${VERSION}"
         gh release create "$VERSION" "$ZIP" "$SIG" "$SUMS" \
-            --title "Microscope ${VERSION}" --generate-notes
+            --title "Microscope ${VERSION}" --notes "$NOTES"
     fi
 else
     echo "  Skipped upload (pass --upload to publish)."
