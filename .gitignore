@@ -4,3 +4,8 @@ build/
 
 # Local backlog (public repo)
 TODO.md
+
+# Release artifacts produced by scripts/release.sh
+/Microscope-*.app.zip
+/Microscope-*.app.zip.sig
+/Microscope-*.app.zip.sha256

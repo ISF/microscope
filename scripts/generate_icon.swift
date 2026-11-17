@@ -77,18 +77,12 @@ ctx.restoreGState()
 fill(CGRect(x: 300, y: 770, width: 430, height: 66), radius: 30, darkMetal, horizontal: false)
 ctx.restoreGState()
 
-// Lamp glow and beam up to the stage
-ctx.saveGState()
-let beam = CGMutablePath()
-beam.move(to: CGPoint(x: 452, y: 752)); beam.addLine(to: CGPoint(x: 498, y: 752))
-beam.addLine(to: CGPoint(x: 520, y: 640)); beam.addLine(to: CGPoint(x: 430, y: 640)); beam.closeSubpath()
-ctx.addPath(beam); ctx.clip()
-ctx.drawLinearGradient(gradient([rgb(255, 230, 140, 0.0), rgb(255, 232, 150, 0.55)], [0, 1]),
-                       start: CGPoint(x: 0, y: 640), end: CGPoint(x: 0, y: 752), options: [])
-ctx.restoreGState()
-ctx.drawRadialGradient(gradient([rgb(255, 246, 200), rgb(255, 214, 110, 0.9), rgb(255, 200, 90, 0)], [0, 0.45, 1]),
-                       startCenter: CGPoint(x: 475, y: 752), startRadius: 0,
-                       endCenter: CGPoint(x: 475, y: 752), endRadius: 52, options: [])
+// Illuminator: a squat housing on the base with a lit lens on top.
+// (Kept compact and solid; a free-floating glow + light cone read as a
+// flower at Dock sizes.)
+fill(CGRect(x: 430, y: 712, width: 100, height: 62), radius: 14, darkMetal)
+fill(CGRect(x: 446, y: 700, width: 68, height: 18), radius: 8,
+     gradient([rgb(255, 244, 200), rgb(255, 214, 120)], [0, 1]), horizontal: false)
 
 // Stage with a glass slide
 fill(CGRect(x: 320, y: 600, width: 360, height: 40), radius: 12, darkMetal, horizontal: false)
