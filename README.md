@@ -26,7 +26,7 @@ Built for a generic "4K WiFi USB" digital microscope that enumerates as
 
 Download `Microscope-<version>-macos-arm64.app.zip` from the
 [releases page](https://github.com/ISF/microscope/releases), unzip it and move
-`Microscope.app` to `/Applications` (or `~/Applications`).
+`Microscope.app` to `/Applications`.
 
 The app is ad-hoc signed, not notarized, so Gatekeeper blocks the first
 launch. Either right-click → **Open** once, or clear the quarantine flag:
@@ -35,7 +35,7 @@ launch. Either right-click → **Open** once, or clear the quarantine flag:
 xattr -dr com.apple.quarantine /Applications/Microscope.app
 ```
 
-Builds are Apple Silicon (arm64) only; build from source on Intel Macs.
+Release builds are for Apple Silicon.
 
 ## Build
 
@@ -44,7 +44,7 @@ project needed.
 
 ```sh
 ./build.sh            # -> build/Microscope.app
-./build.sh install    # also copies it to ~/Applications
+./build.sh install    # also installs it to /Applications
 ```
 
 The app is ad-hoc signed. macOS asks for camera access on first launch.
@@ -90,7 +90,9 @@ shasum -a 256 -c "$ZIP.sha256"
 and was signed with the pinned key.
 
 Maintainers cut a release with `scripts/release.sh v<version> --upload` after
-bumping `CFBundleShortVersionString` in `Resources/Info.plist`.
+bumping `CFBundleShortVersionString` in `Resources/Info.plist` and adding the
+version's section to [`CHANGELOG.md`](./CHANGELOG.md) (used as the release
+notes).
 
 ## License
 
