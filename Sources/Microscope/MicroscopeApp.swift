@@ -163,9 +163,6 @@ struct ContentView: View {
 
     private var controls: some View {
         HStack(spacing: 12) {
-            Image(systemName: "camera.macro")
-                .foregroundStyle(.secondary)
-                .help("Camera (also in the Camera menu, ⌘1…⌘9)")
             Picker("Camera", selection: Binding(
                 get: { camera.currentDevice?.uniqueID ?? "" },
                 set: { id in
@@ -179,6 +176,7 @@ struct ContentView: View {
             }
             .labelsHidden()
             .frame(width: 190)
+            .help("Camera (also in the Camera menu, ⌘1…⌘9)")
 
             Picker("Resolution", selection: Binding(
                 get: { camera.resolution },
