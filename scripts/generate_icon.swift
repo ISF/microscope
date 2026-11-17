@@ -1,6 +1,6 @@
 #!/usr/bin/env swift
-// Generates the Microscope app icon: a brightfield "view through the eyepiece"
-// with stained cells and a measuring reticle, on a macOS-style rounded square.
+// Generates the Microscope app icon: a stylized compound microscope on a
+// macOS-style rounded square.
 //
 // Usage: swift scripts/generate_icon.swift <output.png>
 // Everything is procedural and deterministic; tweak the constants and re-run
@@ -40,99 +40,82 @@ ctx.drawLinearGradient(gradient([rgb(38, 44, 74), rgb(14, 18, 34)], [0, 1]),
                        start: CGPoint(x: 512, y: 100), end: CGPoint(x: 512, y: 924), options: [])
 ctx.restoreGState()
 
-// MARK: Eyepiece ring
-let center = CGPoint(x: 512, y: 512)
-let fieldR: CGFloat = 292
-let ringW: CGFloat = 34
-ctx.saveGState()
-ctx.setShadow(offset: CGSize(width: 0, height: 14), blur: 30, color: rgb(0, 0, 0, 0.55))
-ctx.addEllipse(in: CGRect(x: center.x - fieldR - ringW, y: center.y - fieldR - ringW,
-                          width: 2 * (fieldR + ringW), height: 2 * (fieldR + ringW)))
-ctx.setFillColor(rgb(60, 66, 84)); ctx.fillPath()
-ctx.restoreGState()
-// brushed-metal ring: linear gradient clipped to the annulus
-ctx.saveGState()
-ctx.addEllipse(in: CGRect(x: center.x - fieldR - ringW, y: center.y - fieldR - ringW,
-                          width: 2 * (fieldR + ringW), height: 2 * (fieldR + ringW)))
-ctx.addEllipse(in: CGRect(x: center.x - fieldR, y: center.y - fieldR, width: 2 * fieldR, height: 2 * fieldR))
-ctx.clip(using: .evenOdd)
-ctx.drawLinearGradient(gradient([rgb(214, 220, 232), rgb(120, 128, 146), rgb(70, 76, 94), rgb(170, 178, 194)],
-                                [0, 0.45, 0.7, 1]),
-                       start: CGPoint(x: 260, y: 190), end: CGPoint(x: 760, y: 840), options: [])
-ctx.restoreGState()
-
-// MARK: Field of view (brightfield illumination)
-let field = CGPath(ellipseIn: CGRect(x: center.x - fieldR, y: center.y - fieldR, width: 2 * fieldR, height: 2 * fieldR),
-                   transform: nil)
-ctx.saveGState()
-ctx.addPath(field); ctx.clip()
-ctx.drawRadialGradient(gradient([rgb(255, 251, 240), rgb(250, 236, 214), rgb(232, 206, 186)], [0, 0.65, 1]),
-                       startCenter: CGPoint(x: 470, y: 450), startRadius: 0,
-                       endCenter: center, endRadius: fieldR, options: [.drawsAfterEndLocation])
-
-// Cells: (center x, y, radius x, radius y, rotation deg, nucleus offset x, y, nucleus radius)
-struct Cell { let x, y, rx, ry, rot, nx, ny, nr: CGFloat }
-let cells: [Cell] = [
-    Cell(x: 395, y: 360, rx: 92, ry: 74, rot: -18, nx: 14, ny: 6, nr: 30),
-    Cell(x: 590, y: 330, rx: 84, ry: 70, rot: 24, nx: -10, ny: 12, nr: 27),
-    Cell(x: 700, y: 500, rx: 70, ry: 88, rot: 8, nx: 6, ny: -14, nr: 26),
-    Cell(x: 505, y: 520, rx: 98, ry: 82, rot: -6, nx: -16, ny: 4, nr: 34),
-    Cell(x: 330, y: 560, rx: 78, ry: 92, rot: 30, nx: 12, ny: 10, nr: 28),
-    Cell(x: 440, y: 720, rx: 90, ry: 70, rot: -24, nx: -6, ny: -10, nr: 29),
-    Cell(x: 640, y: 700, rx: 86, ry: 76, rot: 16, nx: 10, ny: 8, nr: 30),
-    Cell(x: 790, y: 330, rx: 70, ry: 64, rot: 0, nx: 0, ny: 0, nr: 24),
-    Cell(x: 230, y: 400, rx: 66, ry: 80, rot: 12, nx: 0, ny: 0, nr: 24),
-]
-for c in cells {
+// MARK: Microscope
+// Helpers: fill a rounded rect with a gradient running left→right (cylinder
+// shading) or top→bottom.
+func fill(_ r: CGRect, radius: CGFloat, _ g: CGGradient, horizontal: Bool = true) {
     ctx.saveGState()
-    ctx.translateBy(x: c.x, y: c.y)
-    ctx.rotate(by: c.rot * .pi / 180)
-    let body = CGRect(x: -c.rx, y: -c.ry, width: 2 * c.rx, height: 2 * c.ry)
-    // cytoplasm: soft pink with a lighter centre
-    ctx.saveGState()
-    ctx.addEllipse(in: body); ctx.clip()
-    ctx.drawRadialGradient(gradient([rgb(246, 196, 214, 0.75), rgb(226, 132, 170, 0.85)], [0, 1]),
-                           startCenter: .zero, startRadius: 0, endCenter: .zero,
-                           endRadius: max(c.rx, c.ry), options: [.drawsAfterEndLocation])
-    ctx.restoreGState()
-    // membrane
-    ctx.addEllipse(in: body.insetBy(dx: 2, dy: 2))
-    ctx.setStrokeColor(rgb(176, 64, 120, 0.9)); ctx.setLineWidth(6); ctx.strokePath()
-    // nucleus with nucleolus
-    let n = CGRect(x: c.nx - c.nr, y: c.ny - c.nr, width: 2 * c.nr, height: 2 * c.nr)
-    ctx.saveGState()
-    ctx.addEllipse(in: n); ctx.clip()
-    ctx.drawRadialGradient(gradient([rgb(132, 92, 196), rgb(74, 42, 130)], [0, 1]),
-                           startCenter: CGPoint(x: c.nx - c.nr * 0.3, y: c.ny - c.nr * 0.3), startRadius: 0,
-                           endCenter: CGPoint(x: c.nx, y: c.ny), endRadius: c.nr, options: [])
-    ctx.restoreGState()
-    ctx.addEllipse(in: CGRect(x: c.nx + c.nr * 0.15, y: c.ny - c.nr * 0.35, width: c.nr * 0.36, height: c.nr * 0.36))
-    ctx.setFillColor(rgb(40, 20, 80, 0.85)); ctx.fillPath()
+    ctx.addPath(CGPath(roundedRect: r, cornerWidth: radius, cornerHeight: radius, transform: nil))
+    ctx.clip()
+    ctx.drawLinearGradient(g, start: CGPoint(x: r.minX, y: r.minY),
+                           end: horizontal ? CGPoint(x: r.maxX, y: r.minY) : CGPoint(x: r.minX, y: r.maxY),
+                           options: [])
     ctx.restoreGState()
 }
+let chrome = gradient([rgb(178, 190, 214), rgb(250, 252, 255), rgb(206, 214, 232), rgb(120, 132, 160)],
+                      [0, 0.32, 0.62, 1])
+let darkMetal = gradient([rgb(70, 78, 104), rgb(128, 138, 166), rgb(52, 58, 82)], [0, 0.35, 1])
+let accent = gradient([rgb(180, 50, 120), rgb(244, 120, 176), rgb(150, 36, 100)], [0, 0.35, 1])
+let violet = gradient([rgb(86, 60, 170), rgb(150, 120, 236), rgb(64, 42, 140)], [0, 0.35, 1])
 
-// Reticle: crosshair with a graduated scale on the horizontal axis
-let ink = rgb(30, 34, 52, 0.72)
-ctx.setStrokeColor(ink)
-ctx.setLineWidth(4)
-ctx.move(to: CGPoint(x: center.x - fieldR, y: center.y)); ctx.addLine(to: CGPoint(x: center.x + fieldR, y: center.y))
-ctx.move(to: CGPoint(x: center.x, y: center.y - fieldR)); ctx.addLine(to: CGPoint(x: center.x, y: center.y + fieldR))
-ctx.strokePath()
-let step: CGFloat = 24
-for i in -10...10 where i != 0 {
-    let x = center.x + CGFloat(i) * step
-    let h: CGFloat = i % 5 == 0 ? 28 : 14
-    ctx.move(to: CGPoint(x: x, y: center.y - h)); ctx.addLine(to: CGPoint(x: x, y: center.y + h))
-}
-ctx.setLineWidth(3.5); ctx.strokePath()
+// Soft drop shadow under the whole instrument
+ctx.saveGState()
+ctx.setShadow(offset: CGSize(width: 0, height: 18), blur: 40, color: rgb(0, 0, 0, 0.55))
 
-// Vignette at the edge of the field
-ctx.drawRadialGradient(gradient([rgb(0, 0, 0, 0), rgb(0, 0, 0, 0), rgb(40, 20, 30, 0.45)], [0, 0.78, 1]),
-                       startCenter: center, startRadius: 0, endCenter: center, endRadius: fieldR, options: [])
-// Glint on the "cover glass"
-ctx.drawRadialGradient(gradient([rgb(255, 255, 255, 0.35), rgb(255, 255, 255, 0)], [0, 1]),
-                       startCenter: CGPoint(x: 400, y: 330), startRadius: 0,
-                       endCenter: CGPoint(x: 400, y: 330), endRadius: 170, options: [])
+// Arm: a thick curved spine from the base up behind the tube
+let arm = CGMutablePath()
+arm.move(to: CGPoint(x: 655, y: 790))
+arm.addLine(to: CGPoint(x: 655, y: 560))
+arm.addQuadCurve(to: CGPoint(x: 430, y: 330), control: CGPoint(x: 660, y: 340))
+ctx.saveGState()
+ctx.addPath(arm.copy(strokingWithWidth: 78, lineCap: .round, lineJoin: .round, miterLimit: 10))
+ctx.clip()
+ctx.drawLinearGradient(chrome, start: CGPoint(x: 600, y: 0), end: CGPoint(x: 720, y: 0), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+ctx.restoreGState()
+
+// Base
+fill(CGRect(x: 300, y: 770, width: 430, height: 66), radius: 30, darkMetal, horizontal: false)
+ctx.restoreGState()
+
+// Illuminator: a squat housing on the base with a lit lens on top.
+// (Kept compact and solid; a free-floating glow + light cone read as a
+// flower at Dock sizes.)
+fill(CGRect(x: 430, y: 712, width: 100, height: 62), radius: 14, darkMetal)
+fill(CGRect(x: 446, y: 700, width: 68, height: 18), radius: 8,
+     gradient([rgb(255, 244, 200), rgb(255, 214, 120)], [0, 1]), horizontal: false)
+
+// Stage with a glass slide
+fill(CGRect(x: 320, y: 600, width: 360, height: 40), radius: 12, darkMetal, horizontal: false)
+fill(CGRect(x: 320, y: 600, width: 360, height: 8), radius: 4,
+     gradient([rgb(170, 180, 206), rgb(120, 130, 160)], [0, 1]), horizontal: false)
+ctx.setFillColor(rgb(150, 220, 245, 0.85))
+ctx.fill(CGRect(x: 396, y: 588, width: 158, height: 14))
+ctx.setFillColor(rgb(244, 120, 176, 0.95))
+ctx.fillEllipse(in: CGRect(x: 458, y: 589, width: 34, height: 12))
+
+// Focus knob on the arm
+ctx.saveGState()
+ctx.setShadow(offset: CGSize(width: 0, height: 6), blur: 12, color: rgb(0, 0, 0, 0.4))
+ctx.addEllipse(in: CGRect(x: 612, y: 470, width: 88, height: 88))
+ctx.clip()
+ctx.drawLinearGradient(violet, start: CGPoint(x: 612, y: 470), end: CGPoint(x: 700, y: 558), options: [])
+ctx.restoreGState()
+ctx.setFillColor(rgb(230, 222, 255, 0.9))
+ctx.fillEllipse(in: CGRect(x: 640, y: 498, width: 32, height: 32))
+
+// Optical tube, tilted with the eyepiece leaning away from the arm.
+// Local frame: origin at the objective tip, tube runs up the −y axis.
+ctx.saveGState()
+ctx.setShadow(offset: CGSize(width: 8, height: 14), blur: 26, color: rgb(0, 0, 0, 0.45))
+ctx.translateBy(x: 478, y: 556)
+ctx.rotate(by: -24 * .pi / 180)
+fill(CGRect(x: -22, y: -64, width: 44, height: 64), radius: 8, darkMetal)          // objective
+fill(CGRect(x: -26, y: -20, width: 52, height: 10), radius: 4, accent)             // objective colour band
+fill(CGRect(x: -58, y: -112, width: 116, height: 54), radius: 18, violet)          // nosepiece
+fill(CGRect(x: -46, y: -330, width: 92, height: 226), radius: 16, chrome)          // body tube
+fill(CGRect(x: -49, y: -262, width: 98, height: 22), radius: 6, accent)            // accent ring
+fill(CGRect(x: -32, y: -396, width: 64, height: 72), radius: 10, chrome)           // eyepiece
+fill(CGRect(x: -42, y: -412, width: 84, height: 26), radius: 10, darkMetal)        // eyecup
 ctx.restoreGState()
 
 // MARK: Write PNG
