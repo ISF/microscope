@@ -184,6 +184,7 @@ final class CameraController: NSObject, ObservableObject {
                 self.lockedDevice = device
                 if let format { device.activeFormat = format }
                 s.commitConfiguration()
+                Self.disableMirroring(s.connections)
                 if !s.isRunning { s.startRunning() }
                 DispatchQueue.main.async { self.status = Self.displayName(device) }
             } catch {
@@ -192,6 +193,16 @@ final class CameraController: NSObject, ObservableObject {
                     self.status = "Couldn't open \(device.localizedName): \(error.localizedDescription)"
                 }
             }
+        }
+    }
+
+    /// Show and save the image exactly as the sensor sees it. macOS may mirror
+    /// preview connections automatically depending on the camera's reported
+    /// position; a microscope image must never be flipped.
+    static func disableMirroring(_ connections: [AVCaptureConnection]) {
+        for c in connections where c.isVideoMirroringSupported {
+            c.automaticallyAdjustsVideoMirroring = false
+            c.isVideoMirrored = false
         }
     }
 

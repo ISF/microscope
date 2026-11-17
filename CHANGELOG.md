@@ -3,6 +3,13 @@
 All notable changes to Microscope are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+- The live preview and saved images are never mirrored. Mirroring is now
+  explicitly disabled instead of left to macOS, which can mirror the preview
+  automatically depending on the camera.
+
 ## [0.1.1] - 2026-11-17
 
 ### Fixed
