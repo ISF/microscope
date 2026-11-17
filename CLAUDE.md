@@ -11,7 +11,10 @@ Instructions for Claude Code when working in this repository.
   `## [X.Y.Z] - YYYY-MM-DD` with `Added` / `Changed` / `Fixed` / `Removed`
   subsections as relevant, plus the matching link reference at the bottom
   of the file.
-- Write the entry from what actually changed since the previous tag
+- Between releases, record user-visible changes under `## [Unreleased]`
+  at the top of `CHANGELOG.md` in the same PR as the change.
+- When cutting a release, rename `[Unreleased]` to the version and date, and
+  check it against what actually changed since the previous tag
   (`git log vPREV..HEAD`), in user-facing terms.
 - When cutting a release:
   1. Bump `CFBundleShortVersionString` (and increment `CFBundleVersion`) in

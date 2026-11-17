@@ -224,6 +224,9 @@ struct PreviewView: NSViewRepresentable {
         let layer = AVCaptureVideoPreviewLayer(session: session)
         layer.videoGravity = .resizeAspect
         layer.backgroundColor = NSColor.black.cgColor
+        // The layer may attach after the session was configured; its connection
+        // is then created here rather than during CameraController.configure.
+        if let connection = layer.connection { CameraController.disableMirroring([connection]) }
         view.layer = layer
         view.wantsLayer = true
         return view
